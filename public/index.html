@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Cuñadas Chic | Control Fácil de Fardos y Ropa</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
@@ -20,7 +20,7 @@
         </div>
       </div>
 
-      <!-- Pestañas Principales (Fáciles de entender) -->
+      <!-- Pestañas Principales (Escritorio) -->
       <nav class="nav-tabs">
         <button class="nav-tab-btn active" data-tab="dashboard">🏠 Resumen</button>
         <button class="nav-tab-btn" data-tab="bales">📦 Mis Fardos</button>
@@ -31,11 +31,13 @@
       </nav>
 
       <div class="header-actions">
-        <button class="btn btn-sm btn-gold" onclick="App.openNewBaleModal()">
-          + Cargar Fardo
+        <button class="btn btn-sm btn-gold header-btn-bale" onclick="App.openNewBaleModal()">
+          <span class="btn-text-full">+ Cargar Fardo</span>
+          <span class="btn-text-mobile">+ Fardo</span>
         </button>
-        <button class="btn btn-sm btn-primary-pink" onclick="App.openNewGarmentModal()">
-          + Cargar Ropa
+        <button class="btn btn-sm btn-primary-pink header-btn-garment" onclick="App.openNewGarmentModal()">
+          <span class="btn-text-full">+ Cargar Ropa</span>
+          <span class="btn-text-mobile">+ Ropa</span>
         </button>
       </div>
     </div>
@@ -273,9 +275,15 @@
         <!-- Ropa disponible para tocar y agregar -->
         <div>
           <div class="table-card" style="margin-bottom:1.25rem;">
-            <div class="table-toolbar">
-              <h4 style="font-weight:800; color:var(--text-primary);">Ropa lista para vender</h4>
-              <span style="font-size:0.84rem; color:var(--text-secondary); font-weight:600;">Haz clic en "+ Agregar" en la prenda que se llevan</span>
+            <div class="table-toolbar" style="flex-wrap:wrap; gap:0.75rem;">
+              <div>
+                <h4 style="font-weight:800; color:var(--text-primary);">Ropa lista para vender</h4>
+                <span style="font-size:0.84rem; color:var(--text-secondary); font-weight:600;">Haz clic en "+ Agregar" en la prenda que se llevan</span>
+              </div>
+              <div class="search-input-wrapper" style="max-width:280px; width:100%;">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="pos-search-garment" placeholder="Buscar por nombre o talle..." oninput="App.filterPosCatalog()">
+              </div>
             </div>
             <div id="pos-garments-catalog" style="padding:1.35rem; display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:1.1rem; max-height:600px; overflow-y:auto;">
               <!-- Tarjetas de ropa -->
@@ -377,6 +385,20 @@
             </button>
           </form>
         </div>
+      </div>
+
+      <!-- Barra flotante de carrito para celular -->
+      <div id="pos-mobile-cart-bar" class="pos-mobile-cart-bar" style="display: none;" onclick="App.scrollToCart()">
+        <div class="pos-mobile-cart-left">
+          <span class="pos-mobile-cart-icon">🛒</span>
+          <div>
+            <div class="pos-mobile-cart-count" id="pos-mobile-cart-count">0 prendas</div>
+            <div class="pos-mobile-cart-total" id="pos-mobile-cart-total">$0.00</div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-sm btn-gold pos-mobile-cart-btn">
+          Cobrar ahora →
+        </button>
       </div>
     </section>
 
@@ -875,6 +897,35 @@
   <footer class="app-footer">
     <p>🌸 <strong>Cuñadas Chic</strong> — Sistema Fácil de Control de Fardos de Ropa, Inventario y Ventas</p>
   </footer>
+
+  <!-- BARRA DE NAVEGACIÓN INFERIOR PARA CELULARES -->
+  <nav class="mobile-bottom-nav" aria-label="Navegación en celular">
+    <button class="mobile-nav-btn active" data-tab="dashboard">
+      <span class="mobile-nav-icon">🏠</span>
+      <span class="mobile-nav-label">Resumen</span>
+    </button>
+    <button class="mobile-nav-btn" data-tab="bales">
+      <span class="mobile-nav-icon">📦</span>
+      <span class="mobile-nav-label">Fardos</span>
+    </button>
+    <button class="mobile-nav-btn" data-tab="garments">
+      <span class="mobile-nav-icon">👗</span>
+      <span class="mobile-nav-label">Mi Ropa</span>
+    </button>
+    <button class="mobile-nav-btn" data-tab="pos">
+      <span class="mobile-nav-icon">🛍️</span>
+      <span class="mobile-nav-label">Cobrar</span>
+      <span class="mobile-cart-badge" id="mobile-badge-cart-count" style="display:none;">0</span>
+    </button>
+    <button class="mobile-nav-btn" data-tab="sales">
+      <span class="mobile-nav-icon">🧾</span>
+      <span class="mobile-nav-label">Ventas</span>
+    </button>
+    <button class="mobile-nav-btn" data-tab="customers">
+      <span class="mobile-nav-icon">👥</span>
+      <span class="mobile-nav-label">Clientas</span>
+    </button>
+  </nav>
 
   <!-- SCRIPTS -->
   <script src="js/api.js"></script>

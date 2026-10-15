@@ -19,8 +19,8 @@ const App = {
 
   // Escuchar clics en botones y menús
   bindEvents() {
-    // Pestañas de arriba
-    document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+    // Pestañas (tanto barra superior como barra inferior de celulares)
+    document.querySelectorAll('.nav-tab-btn, .mobile-nav-btn').forEach(btn => {
       btn.addEventListener('click', e => {
         const tab = e.currentTarget.dataset.tab;
         if (tab) this.switchTab(tab);
@@ -46,8 +46,8 @@ const App = {
   async switchTab(tabName) {
     this.currentTab = tabName;
 
-    // Marcar botón activo arriba
-    document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+    // Marcar botón activo tanto arriba como en la barra de celulares
+    document.querySelectorAll('.nav-tab-btn, .mobile-nav-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === tabName);
     });
 
@@ -58,6 +58,17 @@ const App = {
 
     const activeView = document.getElementById(`view-${tabName}`);
     if (activeView) activeView.classList.add('active');
+
+    // Desplazar suavemente hacia arriba en el celular
+    if (window.innerWidth <= 768) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Gestionar barra flotante de carrito en celular
+    const mobileCartBar = document.getElementById('pos-mobile-cart-bar');
+    if (mobileCartBar) {
+      mobileCartBar.style.display = (tabName === 'pos' && this.cart.length > 0) ? 'flex' : 'none';
+    }
 
     // Cargar los datos de la pantalla
     switch (tabName) {
@@ -178,14 +189,14 @@ const App = {
 
       return `
         <tr>
-          <td><span class="sku-chip">${s.invoice_code}</span></td>
-          <td>
+          <td data-label="N° Ticket"><span class="sku-chip">${s.invoice_code}</span></td>
+          <td data-label="Clienta">
             <div style="font-weight:700;">${s.customer_name || 'Clienta de Mostrador'}</div>
             <div style="font-size:0.75rem; color:var(--text-muted);">${s.customer_instagram || ''}</div>
           </td>
-          <td>${s.sale_date}</td>
-          <td>${estadoTexto}</td>
-          <td style="font-weight:800; color:var(--primary-pink); text-align:right;">${this.formatMoney(s.total_amount)}</td>
+          <td data-label="Día y Hora">${s.sale_date}</td>
+          <td data-label="¿Cómo pagó?">${estadoTexto}</td>
+          <td data-label="Total" style="font-weight:800; color:var(--primary-pink); text-align:right;">${this.formatMoney(s.total_amount)}</td>
         </tr>
       `;
     }).join('');
@@ -450,17 +461,17 @@ const App = {
 
         return `
           <tr>
-            <td><span class="sku-chip">${g.sku}</span></td>
-            <td>
+            <td data-label="Código"><span class="sku-chip">${g.sku}</span></td>
+            <td data-label="Prenda y Marca">
               <div style="font-weight:700; color:var(--text-primary);">${g.name}</div>
               <div style="font-size:0.75rem; color:var(--text-muted);">${g.brand || 'Vintage'} • ${g.color || 'Varios'}</div>
             </td>
-            <td><span class="badge badge-pink">${g.category}</span></td>
-            <td><strong style="color:var(--text-secondary);">${g.size || 'M'}</strong></td>
-            <td><span style="font-size:0.85rem; color:var(--text-secondary);">${this.formatMoney(g.cost_price)}</span></td>
-            <td><strong style="font-size:1rem; color:var(--primary-pink);">${this.formatMoney(g.sale_price)}</strong></td>
-            <td>${statusBadge}</td>
-            <td style="text-align:right;">
+            <td data-label="Tipo"><span class="badge badge-pink">${g.category}</span></td>
+            <td data-label="Talle"><strong style="color:var(--text-secondary);">${g.size || 'M'}</strong></td>
+            <td data-label="Te Costó"><span style="font-size:0.85rem; color:var(--text-secondary);">${this.formatMoney(g.cost_price)}</span></td>
+            <td data-label="Precio Venta"><strong style="font-size:1rem; color:var(--primary-pink);">${this.formatMoney(g.sale_price)}</strong></td>
+            <td data-label="Estado">${statusBadge}</td>
+            <td data-label="Opciones" style="text-align:right;">
               <div style="display:inline-flex; gap:0.3rem;">
                 <button class="btn btn-sm btn-outline-gold" title="Ver etiqueta para colgar" onclick="App.openTagModal(${g.id})">
                   🏷️ Etiqueta
@@ -727,6 +738,49 @@ const App = {
         document.getElementById('pos-amount-paid').value = (total / 2).toFixed(2);
       }
     }
+
+    // Actualizar indicador y barra flotante en celulares
+    const mobileBadge = document.getElementById('mobile-badge-cart-count');
+    const mobileCartBar = document.getElementById('pos-mobile-cart-bar');
+    const mobileCartCount = document.getElementById('pos-mobile-cart-count');
+    const mobileCartTotal = document.getElementById('pos-mobile-cart-total');
+
+    if (this.cart.length > 0) {
+      if (mobileBadge) {
+        mobileBadge.style.display = 'inline-flex';
+        mobileBadge.textContent = this.cart.length;
+      }
+      if (mobileCartBar && this.currentTab === 'pos') {
+        mobileCartBar.style.display = 'flex';
+        if (mobileCartCount) {
+          mobileCartCount.textContent = `${this.cart.length} ${this.cart.length === 1 ? 'prenda lista' : 'prendas listas'}`;
+        }
+        if (mobileCartTotal) {
+          mobileCartTotal.textContent = this.formatMoney(total);
+        }
+      }
+    } else {
+      if (mobileBadge) mobileBadge.style.display = 'none';
+      if (mobileCartBar) mobileCartBar.style.display = 'none';
+    }
+  },
+
+  // Desplazar la pantalla directo al cobro/carrito en celular
+  scrollToCart() {
+    const cartPanel = document.querySelector('.pos-cart-panel');
+    if (cartPanel) {
+      cartPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  },
+
+  // Buscador rápido de ropa dentro de Cobrar/Vender
+  filterPosCatalog() {
+    const query = (document.getElementById('pos-search-garment')?.value || '').toLowerCase().trim();
+    const items = document.querySelectorAll('#pos-garments-catalog > div');
+    items.forEach(card => {
+      const text = card.textContent.toLowerCase();
+      card.style.display = (!query || text.includes(query)) ? 'flex' : 'none';
+    });
   },
 
   async submitSale(e) {
@@ -793,16 +847,16 @@ const App = {
 
         return `
           <tr>
-            <td><span class="sku-chip">${s.invoice_code}</span></td>
-            <td>
+            <td data-label="N° Ticket"><span class="sku-chip">${s.invoice_code}</span></td>
+            <td data-label="Clienta">
               <div style="font-weight:700;">${s.customer_name || 'Clienta de Mostrador'}</div>
               <div style="font-size:0.78rem; color:var(--text-secondary);">${s.customer_phone || ''} ${s.customer_instagram || ''}</div>
             </td>
-            <td>${s.sale_date}</td>
-            <td><strong>${s.items_count} prendas</strong></td>
-            <td><strong style="color:var(--primary-pink); font-size:1.05rem;">${this.formatMoney(s.total_amount)}</strong></td>
-            <td>${statusBadge}</td>
-            <td style="text-align:right;">
+            <td data-label="Día y Hora">${s.sale_date}</td>
+            <td data-label="Prendas"><strong>${s.items_count} prendas</strong></td>
+            <td data-label="Total"><strong style="color:var(--primary-pink); font-size:1.05rem;">${this.formatMoney(s.total_amount)}</strong></td>
+            <td data-label="¿Pagó?">${statusBadge}</td>
+            <td data-label="Ticket" style="text-align:right;">
               <button class="btn btn-sm btn-outline-gold" onclick="App.showReceiptModal(${s.id})">
                 🧾 Ver Ticket
               </button>
@@ -877,22 +931,22 @@ const App = {
 
         return `
           <tr>
-            <td>
+            <td data-label="Clienta">
               <div style="font-weight:800; color:var(--text-primary);">${c.name}</div>
               <div style="font-size:0.78rem; color:var(--text-secondary);">${c.notes || ''}</div>
             </td>
-            <td>
+            <td data-label="Instagram">
               ${c.instagram ? `<span class="sku-chip" style="color:#d946ef; background:#fdf4ff; border-color:#f0abfc;">📸 ${c.instagram}</span>` : '-'}
             </td>
-            <td>
+            <td data-label="WhatsApp">
               ${c.phone ? `<a href="https://wa.me/${c.phone.replace(/[^0-9]/g, '')}" target="_blank" style="color:#15803d; font-weight:700; text-decoration:none;">💬 ${c.phone}</a>` : '-'}
             </td>
-            <td>${c.city || 'Sin ciudad'}</td>
-            <td>
+            <td data-label="Ciudad">${c.city || 'Sin ciudad'}</td>
+            <td data-label="Compras y Deuda">
               <div><strong>${this.formatMoney(c.total_spent)}</strong> (${c.sales_count} compras)</div>
               <div style="margin-top:0.2rem;">${debtBadge}</div>
             </td>
-            <td style="text-align:right;">
+            <td data-label="Opciones" style="text-align:right;">
               <button class="btn btn-sm btn-ghost" onclick="App.openEditCustomerModal(${c.id})">✏️ Modificar</button>
               <button class="btn btn-sm btn-ghost" style="color:#be123c;" onclick="App.deleteCustomer(${c.id})">🗑️ Borrar</button>
             </td>
