@@ -1,0 +1,30 @@
+{
+  "name": "cunadas-chic-fardos",
+  "version": "1.0.0",
+  "description": "Cuñadas Chic - Sistema Integral de Gestión de Fardos de Ropa Usada & Vintage listo para Render y Neon",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "pg": "^8.13.0"
+  },
+  "keywords": [
+    "cunadas-chic",
+    "fardos",
+    "ropa-usada",
+    "vintage",
+    "boutique",
+    "pos",
+    "neon",
+    "render",
+    "postgresql",
+    "sqlite"
+  ],
+  "author": "Cuñadas Chic",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

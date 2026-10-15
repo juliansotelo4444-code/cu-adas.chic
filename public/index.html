@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cuñadas Chic | Control Fácil de Fardos y Ropa</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+</head>
+<body>
+
+  <!-- BARRA SUPERIOR -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-wrapper">
+        <div class="brand-logo-icon">🌸</div>
+        <div class="brand-text">
+          <h1>CUÑADAS <span>CHIC</span></h1>
+          <p>Control Fácil de Fardos, Ropa y Ventas</p>
+        </div>
+      </div>
+
+      <!-- Pestañas Principales (Fáciles de entender) -->
+      <nav class="nav-tabs">
+        <button class="nav-tab-btn active" data-tab="dashboard">🏠 Resumen</button>
+        <button class="nav-tab-btn" data-tab="bales">📦 Mis Fardos</button>
+        <button class="nav-tab-btn" data-tab="garments">👗 Mi Ropa</button>
+        <button class="nav-tab-btn" data-tab="pos">🛍️ Cobrar / Vender</button>
+        <button class="nav-tab-btn" data-tab="sales">🧾 Ventas Hechas</button>
+        <button class="nav-tab-btn" data-tab="customers">👥 Clientas</button>
+      </nav>
+
+      <div class="header-actions">
+        <button class="btn btn-sm btn-gold" onclick="App.openNewBaleModal()">
+          + Cargar Fardo
+        </button>
+        <button class="btn btn-sm btn-primary-pink" onclick="App.openNewGarmentModal()">
+          + Cargar Ropa
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENIDO DE LA PANTALLA -->
+  <main class="main-content">
+
+    <!-- ====================================================================
+         1. VISTA: RESUMEN DEL NEGOCIO (Antes Dashboard)
+         ==================================================================== -->
+    <section id="view-dashboard" class="view-section active">
+      <div class="section-header">
+        <div class="section-title">
+          <h2>📊 Resumen de tu Negocio</h2>
+          <p>Mira de un vistazo cuánto vas vendiendo, lo que gastaste y cuánta ganancia te queda en el bolsillo</p>
+        </div>
+        <div>
+          <button class="btn btn-sm btn-outline-pink" onclick="App.loadDashboard()">🔄 Actualizar Números</button>
+        </div>
+      </div>
+
+      <!-- Tarjetas con los números importantes -->
+      <div class="kpi-grid">
+        <!-- 1: Total Vendido -->
+        <div class="kpi-card kpi-pink">
+          <div class="kpi-header">
+            <span class="kpi-title">Total Vendido</span>
+            <div class="kpi-icon-badge">💰</div>
+          </div>
+          <div class="kpi-value" id="kpi-total-revenue">$0.00</div>
+          <div class="kpi-subtitle">
+            <span id="kpi-collected" class="badge-trend-up">Ya cobrado: $0.00</span>
+          </div>
+        </div>
+
+        <!-- 2: Ganancia Limpia -->
+        <div class="kpi-card kpi-gold">
+          <div class="kpi-header">
+            <span class="kpi-title">Ganancia Limpia</span>
+            <div class="kpi-icon-badge">✨</div>
+          </div>
+          <div class="kpi-value" id="kpi-net-profit">$0.00</div>
+          <div class="kpi-subtitle">
+            <span id="kpi-margin-percent" class="badge-trend-up">0% de ganancia</span>
+          </div>
+        </div>
+
+        <!-- 3: Plata en Fardos -->
+        <div class="kpi-card kpi-purple">
+          <div class="kpi-header">
+            <span class="kpi-title">Plata en Fardos</span>
+            <div class="kpi-icon-badge">📦</div>
+          </div>
+          <div class="kpi-value" id="kpi-bales-invested">$0.00</div>
+          <div class="kpi-subtitle" id="kpi-active-bales">
+            0 fardos cargados
+          </div>
+        </div>
+
+        <!-- 4: Ropa Disponible -->
+        <div class="kpi-card kpi-green">
+          <div class="kpi-header">
+            <span class="kpi-title">Ropa Lista para Vender</span>
+            <div class="kpi-icon-badge">👗</div>
+          </div>
+          <div class="kpi-value" id="kpi-stock-count">0 prendas</div>
+          <div class="kpi-subtitle" id="kpi-potential-val">
+            Si vendes todo juntas: $0.00
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráficos Fáciles de Entender -->
+      <div class="charts-grid">
+        <!-- Gráfico 1: Ventas y Ganancias -->
+        <div class="chart-card col-8">
+          <div class="chart-header">
+            <div class="chart-title">
+              <h3>📈 ¿Cómo vienen las ventas y ganancias?</h3>
+              <p>Muestra las ventas de cada día, lo que costó esa ropa y la ganancia que te quedó</p>
+            </div>
+          </div>
+          <div id="chart-sales-timeline" class="chart-container"></div>
+        </div>
+
+        <!-- Gráfico 2: En qué se fue la plata -->
+        <div class="chart-card col-4">
+          <div class="chart-header">
+            <div class="chart-title">
+              <h3>🍩 ¿En qué se fue la plata de los fardos?</h3>
+              <p>Compra del fardo, envíos, aduana y lavado</p>
+            </div>
+          </div>
+          <div id="chart-cost-breakdown" class="chart-container"></div>
+        </div>
+
+        <!-- Gráfico 3: Fardos que ya recuperaron la plata -->
+        <div class="chart-card col-6">
+          <div class="chart-header">
+            <div class="chart-title">
+              <h3>🏆 ¿Qué fardo ya recuperó la plata?</h3>
+              <p>Te muestra si ya cubriste lo que te costó el fardo y empezaste a ganar plata pura</p>
+            </div>
+          </div>
+          <div id="chart-bale-roi" class="chart-container"></div>
+        </div>
+
+        <!-- Gráfico 4: Qué ropa se vende más -->
+        <div class="chart-card col-6">
+          <div class="chart-header">
+            <div class="chart-title">
+              <h3>🎀 ¿Qué tipo de ropa se vende más?</h3>
+              <p>Ranking de lo que más eligen tus clientas</p>
+            </div>
+          </div>
+          <div id="chart-category-sales" class="chart-container"></div>
+        </div>
+      </div>
+
+      <!-- Tabla de Últimas Ventas -->
+      <div class="table-card">
+        <div class="table-toolbar">
+          <h4 style="font-weight:800; color:var(--text-primary);">Últimas Ventas Anotadas</h4>
+          <button class="btn btn-sm btn-ghost" onclick="App.switchTab('sales')">Ver todas las ventas →</button>
+        </div>
+        <table class="chic-table">
+          <thead>
+            <tr>
+              <th>N° Ticket</th>
+              <th>Clienta</th>
+              <th>Día y Hora</th>
+              <th>¿Cómo pagó?</th>
+              <th style="text-align:right;">Total</th>
+            </tr>
+          </thead>
+          <tbody id="recent-sales-tbody">
+            <!-- Se completa solo -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         2. VISTA: MIS FARDOS
+         ==================================================================== -->
+    <section id="view-bales" class="view-section">
+      <div class="section-header">
+        <div class="section-title">
+          <h2>📦 Mis Fardos de Ropa</h2>
+          <p>Anota lo que compraste, el flete, la aduana y el lavado para que el sistema calcule solo cuánto te costó cada prenda</p>
+        </div>
+        <div>
+          <button class="btn btn-gold" onclick="App.openNewBaleModal()">
+            ✨ Cargar Nuevo Fardo
+          </button>
+        </div>
+      </div>
+
+      <!-- Tarjetas de fardos -->
+      <div id="bales-grid-container" class="bales-grid">
+        <!-- Se completa solo -->
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         3. VISTA: MI ROPA (Antes Inventario & SKUs)
+         ==================================================================== -->
+    <section id="view-garments" class="view-section">
+      <div class="section-header">
+        <div class="section-title">
+          <h2>👗 Mi Ropa para Vender</h2>
+          <p>Toda tu ropa con su código fácil para identificarla, saber de qué fardo salió e imprimirle su etiqueta</p>
+        </div>
+        <div>
+          <button class="btn btn-primary-pink" onclick="App.openNewGarmentModal()">
+            ✨ Cargar Nueva Prenda
+          </button>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <!-- Filtros simples -->
+        <div class="table-toolbar">
+          <div class="search-input-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="search-garment" placeholder="Escribe el código, nombre, marca o color..." oninput="App.loadGarments()">
+          </div>
+          <div class="filter-group">
+            <select id="filter-garment-status" class="select-filter" onchange="App.loadGarments()">
+              <option value="">Todas las prendas</option>
+              <option value="disponible">Disponibles (para vender)</option>
+              <option value="reservado">Apartadas con seña</option>
+              <option value="vendido">Ya vendidas</option>
+              <option value="descarte_merma">Prendas con fallas</option>
+            </select>
+            <select id="filter-garment-bale" class="select-filter" onchange="App.loadGarments()">
+              <option value="">De cualquier fardo</option>
+            </select>
+          </div>
+        </div>
+
+        <table class="chic-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Prenda y Marca</th>
+              <th>Tipo de Ropa</th>
+              <th>Talle</th>
+              <th>Te Costó</th>
+              <th>Precio de Venta</th>
+              <th>Estado</th>
+              <th style="text-align:right;">Opciones</th>
+            </tr>
+          </thead>
+          <tbody id="garments-tbody">
+            <!-- Se completa solo -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         4. VISTA: COBRAR / VENDER (Antes Punto de Venta)
+         ==================================================================== -->
+    <section id="view-pos" class="view-section">
+      <div class="section-header">
+        <div class="section-title">
+          <h2>🛍️ Cobrar / Anotar una Venta</h2>
+          <p>Toca la ropa que se llevan, elige la clienta y anota si te pagó todo o te dejó una seña</p>
+        </div>
+      </div>
+
+      <div class="pos-layout">
+        <!-- Ropa disponible para tocar y agregar -->
+        <div>
+          <div class="table-card" style="margin-bottom:1.25rem;">
+            <div class="table-toolbar">
+              <h4 style="font-weight:800; color:var(--text-primary);">Ropa lista para vender</h4>
+              <span style="font-size:0.84rem; color:var(--text-secondary); font-weight:600;">Haz clic en "+ Agregar" en la prenda que se llevan</span>
+            </div>
+            <div id="pos-garments-catalog" style="padding:1.35rem; display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:1.1rem; max-height:600px; overflow-y:auto;">
+              <!-- Tarjetas de ropa -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Lo que lleva y cobro -->
+        <div class="pos-cart-panel">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1.5px solid #fbcfe8; padding-bottom:0.85rem;">
+            <h3 style="font-size:1.2rem; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:0.4rem;">
+              🛒 Lo que lleva la clienta
+            </h3>
+            <span class="badge badge-pink" id="pos-items-count">0 prendas</span>
+          </div>
+
+          <!-- A quién le vendes -->
+          <div class="form-group">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <label class="form-label">¿A quién le vendes?</label>
+              <button class="btn btn-sm btn-ghost" style="padding:0; font-size:0.78rem; color:var(--primary-pink); font-weight:700;" onclick="App.openNewCustomerModal()">+ Anotar nueva clienta</button>
+            </div>
+            <select id="pos-customer-select" class="form-control">
+              <option value="">-- Clienta del mostrador (Ocasional) --</option>
+            </select>
+          </div>
+
+          <!-- Ropa elegida -->
+          <div style="min-height:120px;">
+            <div id="pos-cart-empty" style="text-align:center; padding:2.5rem 1rem; color:var(--text-muted); font-size:0.88rem;">
+              🌸 Todavía no elegiste ninguna prenda.<br>Toca "+ Agregar" en la lista de la izquierda.
+            </div>
+            <div id="pos-cart-list" class="cart-items-list"></div>
+          </div>
+
+          <!-- Cuenta y Total -->
+          <div class="cart-summary-box">
+            <div class="cart-summary-row">
+              <span>Suma de prendas:</span>
+              <strong id="pos-subtotal">$0.00</strong>
+            </div>
+            <div class="cart-summary-row" style="align-items:center;">
+              <span>Hacer descuento ($):</span>
+              <input type="number" id="pos-discount" class="form-control" style="width:105px; padding:0.35rem 0.65rem; text-align:right;" value="0" min="0" step="0.5" oninput="App.updateCartUI()">
+            </div>
+            <div class="cart-summary-row total">
+              <span>TOTAL A COBRAR:</span>
+              <span id="pos-total">$0.00</span>
+            </div>
+          </div>
+
+          <!-- Cómo paga -->
+          <form onsubmit="App.submitSale(event)">
+            <div class="form-grid" style="margin-bottom:1rem;">
+              <div class="form-group">
+                <label class="form-label">¿Cómo paga?</label>
+                <select id="pos-payment-status" class="form-control" onchange="App.updateCartUI()">
+                  <option value="pagado">Pagó todo junto</option>
+                  <option value="seña_anticipo">Dejó una seña (adelanto)</option>
+                  <option value="pendiente">Se lo lleva y paga después</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Medio de pago</label>
+                <select id="pos-payment-method" class="form-control">
+                  <option value="Efectivo">Efectivo</option>
+                  <option value="Transferencia Bancaria">Transferencia Bancaria</option>
+                  <option value="Mercado Pago">Mercado Pago</option>
+                  <option value="Tarjeta Débito/Crédito">Tarjeta Débito/Crédito</option>
+                  <option value="Dólares Efectivo">Dólares</option>
+                </select>
+              </div>
+
+              <!-- Si dejó seña, cuánto plata dejó -->
+              <div class="form-group col-span-2" id="pos-seña-row" style="display:none;">
+                <label class="form-label" style="color:#b45309;">¿Cuánta plata dejó de seña? ($)</label>
+                <input type="number" id="pos-amount-paid" class="form-control" step="0.5" min="0" placeholder="Ej: 2000">
+              </div>
+
+              <div class="form-group col-span-2">
+                <label class="form-label">Entrega de la ropa</label>
+                <select id="pos-delivery-status" class="form-control">
+                  <option value="Entregado en Mano">Se lo llevó en mano</option>
+                  <option value="Retira por Showroom">Pasa a retirar después</option>
+                  <option value="Envío Pendiente">Hay que enviarlo por correo</option>
+                  <option value="Enviado">Ya fue enviado por correo</option>
+                </select>
+              </div>
+
+              <div class="form-group col-span-2">
+                <label class="form-label">Anotaciones (Opcional)</label>
+                <input type="text" id="pos-notes" class="form-control" placeholder="Ej: pasa el sábado, le gustó para una fiesta...">
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-gold" style="width:100%; padding:0.95rem; font-size:1.02rem;">
+              ✨ Guardar Venta y Ver Ticket
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         5. VISTA: VENTAS HECHAS
+         ==================================================================== -->
+    <section id="view-sales" class="view-section">
+      <div class="section-header">
+        <div class="section-title">
+          <h2>🧾 Ventas Realizadas</h2>
+          <p>Lista de todas tus ventas, quién compró, si pagó todo o si debe una seña</p>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <table class="chic-table">
+          <thead>
+            <tr>
+              <th>N° Ticket</th>
+              <th>Clienta y Contacto</th>
+              <th>Día y Hora</th>
+              <th>Prendas</th>
+              <th>Total</th>
+              <th>¿Pagó?</th>
+              <th style="text-align:right;">Ver Ticket</th>
+            </tr>
+          </thead>
+          <tbody id="sales-tbody">
+            <!-- Se completa solo -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         6. VISTA: MIS CLIENTAS
+         ==================================================================== -->
+    <section id="view-customers" class="view-section">
+      <div class="section-header">
+        <div class="section-title">
+          <h2>👥 Mis Clientas</h2>
+          <p>Tus clientas con su WhatsApp, su Instagram y el aviso si alguna te quedó debiendo una seña</p>
+        </div>
+        <div>
+          <button class="btn btn-primary-pink" onclick="App.openNewCustomerModal()">
+            ✨ Cargar Nueva Clienta
+          </button>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <table class="chic-table">
+          <thead>
+            <tr>
+              <th>Nombre y Apellido</th>
+              <th>Instagram</th>
+              <th>WhatsApp</th>
+              <th>Ciudad</th>
+              <th>Compras y Deuda</th>
+              <th style="text-align:right;">Opciones</th>
+            </tr>
+          </thead>
+          <tbody id="customers-tbody">
+            <!-- Se completa solo -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ====================================================================
+       VENTANAS EMERGENTES (MODALES FÁCILES DE LLENAR)
+       ==================================================================== -->
+
+  <!-- MODAL: CARGAR / EDITAR FARDO -->
+  <div id="modal-bale" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="bale-modal-title">✨ Cargar Nuevo Fardo</h3>
+        <button class="btn-close-modal">&times;</button>
+      </div>
+      <form id="form-bale" onsubmit="App.saveBale(event)">
+        <input type="hidden" id="bale-id">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Código o Apodo del Fardo *</label>
+              <input type="text" id="bale-code" class="form-control" required placeholder="Ej: FARDO-01 o JEAN-USA">
+            </div>
+            <div class="form-group">
+              <label class="form-label">¿Qué tipo de ropa trae? *</label>
+              <select id="bale-category" class="form-control" required>
+                <option value="Abrigos & Chaquetas">Abrigos y Camperas</option>
+                <option value="Vestidos">Vestidos y Fiesta</option>
+                <option value="Sweaters & Tejidos">Sweaters y Tejidos</option>
+                <option value="Pantalones & Jeans">Jeans y Pantalones</option>
+                <option value="Tops & Blusas">Remeras y Blusas</option>
+                <option value="Vintage Premium">Ropa Vintage Especial</option>
+                <option value="Accesorios & Carteras">Carteras y Accesorios</option>
+              </select>
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label">Nombre para acordarte *</label>
+              <input type="text" id="bale-name" class="form-control" required placeholder="Ej: Fardo Camperas de Jean Levi's 45kg">
+            </div>
+            <div class="form-group">
+              <label class="form-label">¿A quién se lo compraste? (Proveedor)</label>
+              <input type="text" id="bale-supplier" class="form-control" placeholder="Ej: Importadora Americana">
+            </div>
+            <div class="form-group">
+              <label class="form-label">¿De qué país vino?</label>
+              <input type="text" id="bale-country" class="form-control" value="Estados Unidos">
+            </div>
+
+            <!-- GASTOS EN EL FARDO -->
+            <div class="form-group">
+              <label class="form-label" style="color:var(--primary-pink);">¿Cuánto pagaste por el fardo? ($) *</label>
+              <input type="number" id="bale-purchase-cost" class="form-control" step="0.5" required min="0" placeholder="0.00">
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="color:var(--gold-600);">Flete / Envío ($)</label>
+              <input type="number" id="bale-shipping-cost" class="form-control" step="0.5" min="0" placeholder="0.00">
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="color:#8b5cf6;">Aduana e Impuestos ($)</label>
+              <input type="number" id="bale-customs-cost" class="form-control" step="0.5" min="0" placeholder="0.00">
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="color:#ec4899;">Lavado, planchado y arreglo ($)</label>
+              <input type="number" id="bale-other-expenses" class="form-control" step="0.5" min="0" placeholder="0.00">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">¿Cuánto pesó en kilos? (kg)</label>
+              <input type="number" id="bale-weight" class="form-control" step="0.1" min="0" placeholder="45">
+            </div>
+            <div class="form-group">
+              <label class="form-label">¿Cuántas prendas calculas que trae?</label>
+              <input type="number" id="bale-est-pieces" class="form-control" min="0" placeholder="50">
+            </div>
+            <div class="form-group">
+              <label class="form-label">¿Cuántas prendas sanas vinieron?</label>
+              <input type="number" id="bale-actual-pieces" class="form-control" min="0" placeholder="48">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Fecha que llegó</label>
+              <input type="date" id="bale-date" class="form-control">
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label">¿Cómo está este fardo?</label>
+              <select id="bale-status" class="form-control">
+                <option value="recibido">Llegó cerrado (sin abrir)</option>
+                <option value="clasificando">Separando y lavando la ropa</option>
+                <option value="abierto_activo">Abierto y listo para vender</option>
+                <option value="agotado">Ya se vendió todo</option>
+              </select>
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label">Anotaciones de calidad (Opcional)</label>
+              <textarea id="bale-notes" class="form-control" placeholder="Ej: vinieron marcas buenas, camperas impecables..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost btn-cancel-modal">Cancelar</button>
+          <button type="submit" class="btn btn-gold">Guardar Fardo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CARGAR ROPA DEL FARDO -->
+  <div id="modal-unpack" class="modal-overlay">
+    <div class="modal-card" style="max-width:520px;">
+      <div class="modal-header">
+        <h3>📦 Cargar Ropa de este Fardo</h3>
+        <button class="btn-close-modal">&times;</button>
+      </div>
+      <form onsubmit="App.submitUnpack(event)">
+        <input type="hidden" id="unpack-bale-id">
+        <div class="modal-body">
+          <p style="font-size:0.88rem; color:var(--text-secondary); margin-bottom:1.1rem;">
+            Crea de una sola vez varias prendas con su código para el fardo:
+            <br><strong id="unpack-bale-title" style="color:var(--primary-pink); font-size:1rem;"></strong>
+          </p>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label class="form-label">¿Cuántas prendas quieres cargar?</label>
+            <input type="number" id="unpack-count" class="form-control" required min="1" max="250" value="25">
+          </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label class="form-label">Tipo de ropa</label>
+            <input type="text" id="unpack-category" class="form-control" required placeholder="Ej: Camperas de Jean">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Precio que le vas a poner a cada una ($)</label>
+            <input type="number" id="unpack-price" class="form-control" required min="0" step="0.5" value="35.00">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost btn-cancel-modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary-pink">Crear Prendas Ahora</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CARGAR PRENDA INDIVIDUAL -->
+  <div id="modal-garment" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="garment-modal-title">✨ Cargar Nueva Prenda</h3>
+        <button class="btn-close-modal">&times;</button>
+      </div>
+      <form id="form-garment" onsubmit="App.saveGarment(event)">
+        <input type="hidden" id="garment-id">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Código de la Prenda *</label>
+              <input type="text" id="garment-sku" class="form-control" required placeholder="Ej: CHIC-01">
+            </div>
+            <div class="form-group">
+              <label class="form-label">¿De qué fardo vino? (Opcional)</label>
+              <select id="garment-bale-id" class="form-control">
+                <option value="">-- No sé / Ropa suelta --</option>
+              </select>
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label">Nombre de la Prenda *</label>
+              <input type="text" id="garment-name" class="form-control" required placeholder="Ej: Blazer Rosa Pastel con Botones Dorados">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tipo de Ropa *</label>
+              <select id="garment-category" class="form-control" required>
+                <option value="Abrigos & Chaquetas">Abrigos y Camperas</option>
+                <option value="Vestidos">Vestidos</option>
+                <option value="Sweaters & Tejidos">Sweaters y Tejidos</option>
+                <option value="Pantalones & Jeans">Jeans y Pantalones</option>
+                <option value="Tops & Blusas">Remeras y Blusas</option>
+                <option value="Faldas & Shorts">Polleras y Shorts</option>
+                <option value="Accesorios & Carteras">Carteras y Accesorios</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Marca</label>
+              <input type="text" id="garment-brand" class="form-control" placeholder="Ej: Levi's, Zara, Vintage">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Talle</label>
+              <input type="text" id="garment-size" class="form-control" placeholder="Ej: S, M, L, XL, Único">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Color</label>
+              <input type="text" id="garment-color" class="form-control" placeholder="Ej: Rosa Pastel, Dorado, Blanco">
+            </div>
+            <div class="form-group">
+              <label class="form-label">¿Cómo está la prenda?</label>
+              <select id="garment-condition" class="form-control">
+                <option value="Excelente">Impecable (Como nueva)</option>
+                <option value="Premium / Nueva">Nueva con etiqueta</option>
+                <option value="Muy Bueno">Muy buen estado</option>
+                <option value="Con Detalle">Con detalle fácil de arreglar</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">¿Está lista para vender?</label>
+              <select id="garment-status" class="form-control">
+                <option value="disponible">Sí, lista para vender</option>
+                <option value="reservado">Apartada con seña</option>
+                <option value="vendido">Ya vendida</option>
+                <option value="descarte_merma">Fallada / Descarte</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">¿Cuánto te costó a ti? ($)</label>
+              <input type="number" id="garment-cost-price" class="form-control" step="0.5" min="0" placeholder="10.00">
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="color:var(--primary-pink); font-weight:700;">¿A cuánto la vas a vender? ($) *</label>
+              <input type="number" id="garment-sale-price" class="form-control" step="0.5" required min="0" placeholder="35.00">
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label">Código de barras numérico (Opcional)</label>
+              <input type="text" id="garment-barcode" class="form-control" placeholder="Ej: 779123456789">
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label">Medidas o detalles para la clienta</label>
+              <textarea id="garment-notes" class="form-control" placeholder="Ej: ancho de hombros, tela suave, lavado a mano..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost btn-cancel-modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary-pink">Guardar Prenda</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CARGAR CLIENTA -->
+  <div id="modal-customer" class="modal-overlay">
+    <div class="modal-card" style="max-width:550px;">
+      <div class="modal-header">
+        <h3 id="customer-modal-title">✨ Anotar Nueva Clienta</h3>
+        <button class="btn-close-modal">&times;</button>
+      </div>
+      <form id="form-customer" onsubmit="App.saveCustomer(event)">
+        <input type="hidden" id="customer-id">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group col-span-2">
+              <label class="form-label">Nombre y Apellido *</label>
+              <input type="text" id="customer-name" class="form-control" required placeholder="Ej: Sofía Gómez">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Instagram</label>
+              <input type="text" id="customer-instagram" class="form-control" placeholder="Ej: @sofi_vintage">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Número de WhatsApp</label>
+              <input type="text" id="customer-phone" class="form-control" placeholder="Ej: 11 4521-8890">
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label">Correo electrónico (Opcional)</label>
+              <input type="email" id="customer-email" class="form-control" placeholder="cliente@correo.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ciudad / Barrio</label>
+              <input type="text" id="customer-city" class="form-control" placeholder="Ej: Palermo, CABA">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Dirección para enviar o entregar</label>
+              <input type="text" id="customer-address" class="form-control" placeholder="Calle y número">
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label">¿Qué cosas le gustan comprar?</label>
+              <textarea id="customer-notes" class="form-control" placeholder="Ej: talle M, le gustan los vestidos rosas..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost btn-cancel-modal">Cancelar</button>
+          <button type="submit" class="btn btn-gold">Guardar Clienta</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ETIQUETA PARA IMPRIMIR -->
+  <div id="modal-tag" class="modal-overlay">
+    <div class="modal-card" style="max-width:420px;">
+      <div class="modal-header">
+        <h3>🏷️ Etiqueta para la Prenda</h3>
+        <button class="btn-close-modal">&times;</button>
+      </div>
+      <div class="modal-body" style="background:#fff0f5;">
+        <div class="printable-tag" id="printable-tag-area">
+          <div class="tag-brand" id="tag-brand">CUÑADAS CHIC</div>
+          <div class="tag-title" id="tag-name">Nombre de Prenda</div>
+          <div class="tag-sku" id="tag-sku">CÓDIGO-00</div>
+          
+          <div class="tag-details-row">
+            <span id="tag-size">Talle: M</span>
+            <span id="tag-condition">Impecable</span>
+          </div>
+
+          <div class="tag-price" id="tag-price">$0.00</div>
+
+          <div class="barcode-svg-container">
+            <svg width="220" height="50" viewBox="0 0 220 50">
+              <rect x="10" y="0" width="3" height="50" fill="#2d1c24"/>
+              <rect x="16" y="0" width="2" height="50" fill="#2d1c24"/>
+              <rect x="22" y="0" width="5" height="50" fill="#2d1c24"/>
+              <rect x="30" y="0" width="2" height="50" fill="#2d1c24"/>
+              <rect x="36" y="0" width="4" height="50" fill="#2d1c24"/>
+              <rect x="44" y="0" width="2" height="50" fill="#2d1c24"/>
+              <rect x="50" y="0" width="6" height="50" fill="#2d1c24"/>
+              <rect x="60" y="0" width="2" height="50" fill="#2d1c24"/>
+              <rect x="66" y="0" width="3" height="50" fill="#2d1c24"/>
+              <rect x="74" y="0" width="5" height="50" fill="#2d1c24"/>
+              <rect x="83" y="0" width="2" height="50" fill="#2d1c24"/>
+              <rect x="89" y="0" width="4" height="50" fill="#2d1c24"/>
+              <rect x="97" y="0" width="2" height="50" fill="#2d1c24"/>
+              <rect x="103" y="0" width="6" height="50" fill="#2d1c24"/>
+              <rect x="113" y="0" width="3" height="50" fill="#2d1c24"/>
+              <rect x="120" y="0" width="2" height="50" fill="#2d1c24"/>
+              <rect x="126" y="0" width="5" height="50" fill="#2d1c24"/>
+              <rect x="135" y="0" width="3" height="50" fill="#2d1c24"/>
+              <rect x="142" y="0" width="2" height="50" fill="#2d1c24"/>
+              <rect x="148" y="0" width="6" height="50" fill="#2d1c24"/>
+              <rect x="158" y="0" width="2" height="50" fill="#2d1c24"/>
+              <rect x="164" y="0" width="4" height="50" fill="#2d1c24"/>
+              <rect x="172" y="0" width="3" height="50" fill="#2d1c24"/>
+              <rect x="179" y="0" width="5" height="50" fill="#2d1c24"/>
+              <rect x="188" y="0" width="2" height="50" fill="#2d1c24"/>
+              <rect x="194" y="0" width="4" height="50" fill="#2d1c24"/>
+              <rect x="202" y="0" width="3" height="50" fill="#2d1c24"/>
+            </svg>
+            <span id="tag-barcode-text" style="font-family:monospace; font-size:0.75rem; letter-spacing:1px; color:var(--text-secondary);">779100000000</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost btn-cancel-modal">Cerrar</button>
+        <button type="button" class="btn btn-gold" onclick="App.printTag()">🖨️ Imprimir Etiqueta</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: TICKET DE VENTA -->
+  <div id="modal-receipt" class="modal-overlay">
+    <div class="modal-card" style="max-width:480px;">
+      <div class="modal-header">
+        <h3>🧾 Ticket de Venta</h3>
+        <button class="btn-close-modal">&times;</button>
+      </div>
+      <div class="modal-body" id="receipt-printable-area">
+        <div style="background:white; border:1.5px solid #fbcfe8; border-radius:14px; padding:1.6rem; box-shadow:0 6px 18px rgba(244,63,104,0.08);">
+          <div style="text-align:center; border-bottom:1.5px dashed #fbcfe8; padding-bottom:1.1rem; margin-bottom:1.1rem;">
+            <div style="font-size:1.4rem; font-weight:900; color:var(--primary-pink); letter-spacing:0.06em;">CUÑADAS CHIC</div>
+            <div style="font-size:0.84rem; color:var(--text-secondary); font-weight:600;">Moda Vintage & Ropa Americana</div>
+            <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.35rem;" id="receipt-date">2026-10-14 18:00</div>
+            <div style="margin-top:0.5rem;"><span class="sku-chip" id="receipt-code">TICKET-01</span></div>
+          </div>
+
+          <div style="font-size:0.86rem; margin-bottom:1.1rem;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+              <span style="color:var(--text-secondary);">Clienta:</span>
+              <strong id="receipt-customer">Clienta de Mostrador</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+              <span style="color:var(--text-secondary);">Instagram:</span>
+              <span id="receipt-instagram" style="color:var(--primary-pink); font-weight:600;">-</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+              <span style="color:var(--text-secondary);">Pagó con:</span>
+              <span id="receipt-method" style="font-weight:600;">Efectivo</span>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:var(--text-secondary);">Entrega:</span>
+              <span id="receipt-delivery" style="font-weight:600;">Se lo llevó en mano</span>
+            </div>
+          </div>
+
+          <!-- Ropa del ticket -->
+          <table style="width:100%; border-collapse:collapse; font-size:0.86rem; margin-bottom:1rem;">
+            <thead>
+              <tr style="border-bottom:1.5px solid #fbcfe8;">
+                <th style="text-align:left; padding:0.45rem 0; color:var(--text-secondary);">Prenda</th>
+                <th style="text-align:right; padding:0.45rem 0; color:var(--text-secondary);">Precio</th>
+              </tr>
+            </thead>
+            <tbody id="receipt-items-tbody">
+              <!-- Se completa solo -->
+            </tbody>
+          </table>
+
+          <div style="border-top:1.5px dashed #fbcfe8; padding-top:0.85rem; font-size:0.88rem; display:flex; flex-direction:column; gap:0.4rem;">
+            <div style="display:flex; justify-content:space-between; color:var(--text-secondary);">
+              <span>Suma de prendas:</span>
+              <span id="receipt-subtotal">$0.00</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; color:#15803d; font-weight:600;">
+              <span>Descuento que le hiciste:</span>
+              <span id="receipt-discount">-$0.00</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:1.25rem; font-weight:900; color:var(--primary-pink); border-top:1.5px solid #fbcfe8; padding-top:0.5rem;">
+              <span>TOTAL:</span>
+              <span id="receipt-total">$0.00</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; color:var(--text-secondary); font-weight:700;">
+              <span>Plata que te pagó:</span>
+              <span id="receipt-paid">$0.00</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; color:#b45309; font-weight:800;" id="receipt-balance-row">
+              <span>Queda debiendo:</span>
+              <span id="receipt-balance">$0.00</span>
+            </div>
+          </div>
+
+          <div style="text-align:center; margin-top:1.6rem; font-size:0.8rem; color:var(--text-muted); font-weight:600;">
+            ¡Gracias por tu compra! 🌸<br>
+            Cuñadas Chic
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost btn-cancel-modal">Cerrar</button>
+        <button type="button" class="btn btn-gold" onclick="window.print()">🖨️ Imprimir Ticket</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PIE DE PÁGINA -->
+  <footer class="app-footer">
+    <p>🌸 <strong>Cuñadas Chic</strong> — Sistema Fácil de Control de Fardos de Ropa, Inventario y Ventas</p>
+  </footer>
+
+  <!-- SCRIPTS -->
+  <script src="js/api.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
