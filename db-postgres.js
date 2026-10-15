@@ -9,9 +9,17 @@ const { Pool } = require('pg');
 
 const SCHEMA_POSTGRES_PATH = path.join(__dirname, 'schema.postgres.sql');
 
+// Limpiar parámetros incompatibles con pg (como channel_binding) si vienen en el connection string
+let dbUrl = process.env.DATABASE_URL || '';
+if (dbUrl) {
+  dbUrl = dbUrl.replace(/([?&])channel_binding=[^&]*(&|$)/, (match, prefix, suffix) => {
+    return prefix === '?' && suffix ? '?' : '';
+  }).replace(/[?&]$/, '');
+}
+
 // Configuración del Pool de conexiones para Neon (requiere SSL)
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: dbUrl,
   ssl: {
     rejectUnauthorized: false
   },
