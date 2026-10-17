@@ -7,6 +7,34 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const url = require('node:url');
+
+// Cargar variables de entorno desde .env antes de requerir db
+const envPath = path.join(__dirname, '.env');
+if (fs.existsSync(envPath)) {
+  if (typeof process.loadEnvFile === 'function') {
+    try {
+      process.loadEnvFile(envPath);
+    } catch (_) {}
+  } else {
+    try {
+      const lines = fs.readFileSync(envPath, 'utf-8').split('\n');
+      for (const line of lines) {
+        const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+        if (match) {
+          const key = match[1];
+          let val = (match[2] || '').trim();
+          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.slice(1, -1);
+          }
+          if (!process.env[key]) {
+            process.env[key] = val;
+          }
+        }
+      }
+    } catch (_) {}
+  }
+}
+
 const db = require('./db.js');
 
 // Inicializar la base de datos (SQLite local o Neon PostgreSQL según el entorno)
@@ -45,6 +73,16 @@ function sendJSON(res, statusCode, data) {
 // Utilidad para parsear el cuerpo JSON de peticiones POST/PUT
 function parseRequestBody(req) {
   return new Promise((resolve, reject) => {
+    // Si la plataforma (ej. Vercel) ya parseó el body
+    if (req.body !== undefined && req.body !== null) {
+      if (typeof req.body === 'object') return resolve(req.body);
+      try {
+        return resolve(JSON.parse(req.body));
+      } catch (err) {
+        return reject(new Error('JSON malformado en la petición'));
+      }
+    }
+
     let body = '';
     req.on('data', chunk => {
       body += chunk.toString();
@@ -106,7 +144,7 @@ function serveStaticFile(req, res, pathname) {
 }
 
 // Router principal del servidor
-const server = http.createServer(async (req, res) => {
+async function handleRequest(req, res) {
   const reqUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = reqUrl.pathname;
   const method = req.method;
@@ -294,11 +332,16 @@ const server = http.createServer(async (req, res) => {
 
   // Si no es /api/, servir archivo estático de la carpeta public
   serveStaticFile(req, res, pathname);
-});
+}
 
-// Iniciar el servidor
-server.listen(PORT, () => {
-  console.log(`
+// Servidor HTTP
+const server = http.createServer(handleRequest);
+
+// Si se ejecuta directamente (ej. en local o Render), iniciar el puerto
+if (require.main === module) {
+  server.listen(PORT, () => {
+    const dbEngine = process.env.DATABASE_URL ? 'Neon Cloud (PostgreSQL)' : 'SQLite (Local database.sqlite)';
+    console.log(`
 ╔════════════════════════════════════════════════════════════════════════╗
 ║                                                                        ║
 ║   🌸 CUÑADAS CHIC - SISTEMA DE FARDOS DE ROPA USADA & VINTAGE 🌸       ║
@@ -306,13 +349,18 @@ server.listen(PORT, () => {
 ║   Servidor iniciado con éxito en:                                      ║
 ║   👉  http://localhost:${PORT}                                          ║
 ║                                                                        ║
-║   Base de Datos SQL: SQLite (node:sqlite nativo - Limpia / Sin Demos)   ║
+║   Base de Datos SQL: ${dbEngine.padEnd(50)}║
 ║   Estética: Más Rosa & Oro, HTML5, CSS3, JS ES6+, REST API             ║
 ╚════════════════════════════════════════════════════════════════════════╝
-  `);
-});
+    `);
+  });
+}
 
 // Manejo de errores no capturados
 process.on('uncaughtException', err => {
   console.error('Uncaught Exception:', err);
 });
+
+// Exportar handler para compatibilidad con Vercel Serverless
+module.exports = handleRequest;
+module.exports.server = server;
