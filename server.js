@@ -145,8 +145,20 @@ function serveStaticFile(req, res, pathname) {
 
 // Router principal del servidor
 async function handleRequest(req, res) {
-  const reqUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-  const pathname = reqUrl.pathname;
+  // Determinar la URL y ruta solicitada (soportando Vercel Serverless, proxies y Node nativo)
+  const forwardedUri = req.headers['x-forwarded-uri'] || req.headers['x-matched-path'];
+  const rawUrl = forwardedUri || req.url;
+  const reqUrl = new URL(rawUrl, `http://${req.headers.host || 'localhost'}`);
+  let pathname = reqUrl.pathname;
+
+  // Si Vercel rewrote la llamada a /api/index.js?path=...
+  if (pathname === '/api/index.js' || pathname === '/api/index' || pathname === '/api') {
+    const subpath = reqUrl.searchParams.get('path') || (req.query && req.query.path);
+    if (subpath) {
+      pathname = subpath.startsWith('/') ? `/api${subpath}` : `/api/${subpath}`;
+    }
+  }
+
   const method = req.method;
   const queryParams = Object.fromEntries(reqUrl.searchParams.entries());
 
@@ -162,7 +174,7 @@ async function handleRequest(req, res) {
   }
 
   // Rutas de API REST
-  if (pathname.startsWith('/api/')) {
+  if (pathname.startsWith('/api/') || pathname === '/api') {
     try {
       // 1. MÉTRICAS FINANCIERAS Y DASHBOARD
       if (pathname === '/api/metrics' && method === 'GET') {
